@@ -111,9 +111,24 @@ const routes = [
                 redirect: '/admin/courses'
             },
             {
+                path: 'face',
+                name: 'FaceIdentify',
+                component: () => import('../views/admin/FaceIdentify.vue')
+            },
+            {
                 path: 'courses',
                 name: 'AdminCourses',
                 component: () => import('../views/admin/CourseManagement.vue')
+            },
+            {
+                path: 'courses/:id',
+                name: 'AdminCourseDetail',
+                component: () => import('../views/admin/CourseDetail.vue')
+            },
+            {
+                path: 'courses/:coursesId/chapters',
+                name: 'AdminCoursesChapters',
+                component: () => import('../views/admin/AdminCoursesChapters.vue')
             },
             {
                 path: 'question-banks',

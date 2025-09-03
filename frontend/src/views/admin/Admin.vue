@@ -23,10 +23,14 @@
       <el-container class="main-container">
         <el-aside width="200px" class="sidebar">
           <el-menu
-            :default-active="$route.path"
-            router
-            class="sidebar-menu"
+              :default-active="$route.path"
+              router
+              class="sidebar-menu"
           >
+            <el-menu-item index="/admin/face">
+              <el-icon><VideoPlay /></el-icon>
+              <span>人脸识别</span>
+            </el-menu-item>
             <el-menu-item index="/admin/courses">
               <el-icon><VideoPlay /></el-icon>
               <span>课程管理</span>

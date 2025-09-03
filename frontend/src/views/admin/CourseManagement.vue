@@ -36,6 +36,13 @@
           <el-table :data="courses" style="width: 100%" v-loading="loading">
             <el-table-column prop="title" label="课程名称" min-width="200"/>
             <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip/>
+            <el-table-column prop="title" label="课程名称" min-width="200" />
+            <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
+            <el-table-column prop="classHours" label="学时" width="100">
+              <template #default="scope">
+                {{ scope.row.classHours }} 小时
+              </template>
+            </el-table-column>
             <el-table-column prop="price" label="价格" width="120">
               <template #default="scope">
                 ¥{{ scope.row.price }}
@@ -49,19 +56,32 @@
                 </el-tag>
               </template>
             </el-table-column>
+            <el-table-column prop="startTime" label="开始时间" width="180">
+              <template #default="scope">
+                {{ formatDateTime(scope.row.startTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="endTime" label="结束时间" width="180">
+              <template #default="scope">
+                {{ formatDateTime(scope.row.endTime) }}
+              </template>
+            </el-table-column>
             <el-table-column prop="createTime" label="创建时间" width="180">
               <template #default="scope">
                 {{ formatDateTime(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="280" fixed="right">
+            <el-table-column label="操作" width="320" fixed="right">
               <template #default="scope">
                 <el-button size="small" @click="viewCourse(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="editCourse(scope.row)">
                   编辑
                 </el-button>
                 <el-button size="small" type="warning" @click="manageChapters(scope.row)">
-                  管理章节
+                  管理
+                </el-button>
+                <el-button size="small" type="" @click="manageChapters(scope.row)">
+                  预览
                 </el-button>
                 <el-button size="small" type="danger" @click="deleteCourse(scope.row)">
                   删除
@@ -123,11 +143,44 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="是否上线" prop="isOnline">
-                <el-switch v-model="courseForm.isOnline"/>
+              <el-form-item label="学时" prop="classHours">
+                <el-input-number v-model="courseForm.classHours" :min="0" :max="1000" />
+                <span style="margin-left: 10px">小时</span>
               </el-form-item>
             </el-col>
           </el-row>
+
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="开始时间" prop="startTime">
+                <el-date-picker
+                    v-model="courseForm.startTime"
+                    type="datetime"
+                    placeholder="选择开始时间"
+                    style="width: 100%"
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                    @change="checkTimeRange"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="结束时间" prop="endTime">
+                <el-date-picker
+                    v-model="courseForm.endTime"
+                    type="datetime"
+                    placeholder="选择结束时间"
+                    style="width: 100%"
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                    @change="checkTimeRange"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+
+          <el-form-item label="是否上线" prop="isOnline">
+            <el-switch v-model="courseForm.isOnline" />
+          </el-form-item>
           <el-form-item label="可见角色" prop="visibleRoleIds">
             <el-select
                 v-model="courseForm.visibleRoleIds"
@@ -190,7 +243,12 @@ export default {
       isOnline: true,
       visibleRoleIds: [],
       price: 0,
-      coverImageUrl: ''
+      coverImageUrl: '',
+      createTime: null,
+      updateTime: null,
+      classHours: 0,
+      startTime: '',
+      endTime: ''
     })
 
     const rules = {
@@ -207,8 +265,27 @@ export default {
         {type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change'}
       ],
       price: [
-        {required: true, message: '请输入课程价格', trigger: 'blur'}
+        { required: true, message: '请输入课程价格', trigger: 'blur' }
+      ],
+      classHours: [
+        { required: true, message: '请输入学时', trigger: 'blur' }
+      ],
+      startTime: [
+        { required: true, message: '请选择开始时间', trigger: 'change' }
+      ],
+      endTime: [
+        { required: true, message: '请选择结束时间', trigger: 'change' }
       ]
+    }
+    const checkTimeRange = () => {
+      if (courseForm.startTime && courseForm.endTime) {
+        const startTime = new Date(courseForm.startTime)
+        const endTime = new Date(courseForm.endTime)
+
+        if (startTime >= endTime) {
+          ElMessage.warning('注意：结束时间应晚于开始时间')
+        }
+      }
     }
 
     const loadCourses = async () => {
@@ -247,7 +324,10 @@ export default {
         visibleRoleIds: [],
         price: 0,
         createTime: null,
-        updateTime: null
+        updateTime: null,
+        classHours: 0,
+        startTime: '',
+        endTime: '',
       })
       dialogVisible.value = true
     }
@@ -262,7 +342,13 @@ export default {
         coverImageUrl: course.coverImageUrl,
         isOnline: course.isOnline,
         visibleRoleIds: course.visibleRoles ? course.visibleRoles.map(role => role.id) : [],
-        price: course.price || 0
+        visibleRoles: course.visibleRoles || [],
+        price: course.price || 0,
+        createTime: course.createTime,
+        updateTime: course.updateTime,
+        classHours: course.classHours || 0,
+        startTime: course.startTime,
+        endTime: course.endTime,
       })
       dialogVisible.value = true
     }
@@ -271,7 +357,19 @@ export default {
       try {
         await courseFormRef.value.validate()
 
+        // 添加时间范围验证
+        if (courseForm.startTime && courseForm.endTime) {
+          const startTime = new Date(courseForm.startTime)
+          const endTime = new Date(courseForm.endTime)
+
+          if (startTime >= endTime) {
+            ElMessage.error('结束时间必须晚于开始时间')
+            return
+          }
+        }
+
         if (isEdit.value) {
+          console.log('请求参数', courseForm)
           await api.put(`/courses/${courseForm.id}`, courseForm)
           ElMessage.success('更新成功')
         } else {
@@ -359,6 +457,7 @@ export default {
       courseForm,
       courseFormRef,
       rules,
+      loadCourses,
       showCreateDialog,
       editCourse,
       submitCourse,
@@ -372,8 +471,9 @@ export default {
       handleSearch,
       handleSizeChange,
       handleCurrentChange,
+      roleCategories,
       formatDateTime,
-      roleCategories
+      checkTimeRange
     }
   }
 }
