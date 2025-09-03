@@ -122,13 +122,13 @@ const routes = [
             },
             {
                 path: 'courses/:id',
-                name: 'AdminCourseDetail',
-                component: () => import('../views/admin/CourseDetail.vue')
+                name: 'AdminCoursesChapters',
+                component: () => import('../views/admin/AdminCoursesChapters.vue')
             },
             {
                 path: 'courses/:coursesId/chapters',
-                name: 'AdminCoursesChapters',
-                component: () => import('../views/admin/AdminCoursesChapters.vue')
+                name: 'AdminCourseDetail',
+                component: () => import('../views/admin/AdminCourseDetail.vue')
             },
             {
                 path: 'question-banks',

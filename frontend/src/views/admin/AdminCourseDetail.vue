@@ -2,7 +2,7 @@
   <div class="course-detail">
     <div class="course-header">
       <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/dashboard/courses' }">我的课程</el-breadcrumb-item>
+        <el-breadcrumb-item :to="{ path: '/admin/courses' }">课程管理</el-breadcrumb-item>
         <el-breadcrumb-item>{{ course.title }}</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
@@ -11,68 +11,50 @@
       <div class="course-info">
         <div class="course-title">
           <h1>{{ course.title }}</h1>
-          <el-tag :type="course.status === 'ACTIVE' ? 'success' : 'info'">
-            {{ course.status === 'ACTIVE' ? '已上线' : '未上线' }}
+          <el-tag :type="course.isOnline === true ? 'success' : 'info'">
+            {{ course.isOnline === true ? '已上线' : '未上线' }}
           </el-tag>
         </div>
-        
+
         <div class="course-meta">
           <p class="course-description">{{ course.description }}</p>
           <div class="course-stats">
-            <span><i class="el-icon-time"></i> 时长: {{ course.duration || '未知' }}</span>
+            <span><i class="el-icon-time"></i> 时长: {{ course.duration || '加载中...' }}</span>
             <span><i class="el-icon-view"></i> 观看次数: {{ course.viewCount || 0 }}</span>
             <span><i class="el-icon-user"></i> 学习人数: {{ course.studentCount || 0 }}</span>
           </div>
         </div>
 
-        <div class="course-progress" v-if="userProgress">
-          <el-progress 
-            :percentage="progressPercentage" 
-            :format="format"
-            :stroke-width="8"
-            color="#409EFF"
-          />
-          <p>学习进度: {{ userProgress.completedChapters || 0 }}/{{ course.totalChapters || 0 }} 章节</p>
-        </div>
+        <!-- 移除用户进度显示 -->
       </div>
 
       <div class="video-section">
         <div class="video-player">
           <video
-            ref="videoPlayer"
-            class="video-js"
-            controls
-            preload="auto"
-            width="100%"
-            height="400"
-            @timeupdate="onTimeUpdate"
-            @ended="onVideoEnded"
+              ref="videoPlayer"
+              class="video-js"
+              controls
+              preload="auto"
+              width="100%"
+              height="400"
+              @timeupdate="onTimeUpdate"
+              @ended="onVideoEnded"
           >
             <source :src="course.videoUrl" type="video/mp4">
             您的浏览器不支持视频播放。
           </video>
         </div>
-        
-        <div class="video-controls">
-          <el-button 
-            type="primary" 
-            @click="markAsCompleted"
-            :disabled="!canMarkCompleted"
-          >
-            {{ isCompleted ? '已完成' : '标记为完成' }}
-          </el-button>
-          <el-button @click="resetProgress">重置进度</el-button>
-        </div>
+
       </div>
 
       <div class="course-chapters" v-if="course.chapters && course.chapters.length">
         <h3>课程章节</h3>
         <el-timeline>
           <el-timeline-item
-            v-for="(chapter, index) in course.chapters"
-            :key="index"
-            :timestamp="chapter.duration"
-            :type="getChapterType(chapter)"
+              v-for="(chapter, index) in course.chapters"
+              :key="index"
+              :timestamp="chapter.duration"
+              :type="getChapterType(chapter)"
           >
             <h4>{{ chapter.title }}</h4>
             <p>{{ chapter.description }}</p>
@@ -81,8 +63,8 @@
       </div>
 
       <div class="course-actions">
-        <el-button type="primary" @click="continueLearning" v-if="!isCompleted">
-          继续学习
+        <el-button type="primary" @click="continueLearning">
+          播放视频
         </el-button>
         <el-button @click="goBack">返回课程列表</el-button>
       </div>
@@ -93,12 +75,11 @@
     </div>
   </div>
 </template>
-
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 
@@ -108,7 +89,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
-    
+
     const course = ref({})
     const userProgress = ref(null)
     const videoPlayer = ref(null)
@@ -116,19 +97,12 @@ export default {
     const currentTime = ref(0)
     const isCompleted = ref(false)
 
-    const courseId = computed(() => route.params.id)
+    const courseId = computed(() => route.params.coursesId)
+
     const progressPercentage = computed(() => {
       if (!userProgress.value || !course.value.totalChapters) return 0
       return Math.round((userProgress.value.completedChapters / course.value.totalChapters) * 100)
     })
-
-    const canMarkCompleted = computed(() => {
-      return userProgress.value && userProgress.value.completedChapters > 0
-    })
-
-    const format = (percentage) => {
-      return percentage === 100 ? '完成' : `${percentage}%`
-    }
 
     const getChapterType = (chapter) => {
       if (userProgress.value && userProgress.value.completedChapters >= chapter.order) {
@@ -136,48 +110,12 @@ export default {
       }
       return 'primary'
     }
-const getVideoDuration = () => {
-  if (course.value.videoUrl) {
-    // 使用原生video元素获取时长
-    const video = document.createElement('video');
-    video.src = course.value.videoUrl;
-
-    video.addEventListener('loadedmetadata', () => {
-      const duration = Math.floor(video.duration);
-      if (duration && duration > 0) {
-        course.value.duration = formatDuration(duration);
-      } else if (!course.value.duration) {
-        course.value.duration = '未知';
-      }
-      video.remove(); // 清理创建的元素
-    });
-
-    video.addEventListener('error', () => {
-      if (!course.value.duration) {
-        course.value.duration = '未知';
-      }
-      video.remove();
-    });
-  } else if (!course.value.duration) {
-    course.value.duration = '未知';
-  }
-};
-
-const formatDuration = (seconds) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  } else {
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  }
-};
 
     const loadCourse = async () => {
       try {
+        console.log('Course ID:', courseId.value)
         const response = await store.dispatch('fetchCourseById', courseId.value)
+        console.log('Course:', response.data)
         course.value = response.data
         await loadUserProgress()
         initializeVideoPlayer()
@@ -200,6 +138,46 @@ const formatDuration = (seconds) => {
       }
     }
 
+    const getVideoDuration = () => {
+      if (course.value.videoUrl) {
+        // 使用原生video元素获取时长
+        const video = document.createElement('video');
+        video.src = course.value.videoUrl;
+
+        video.addEventListener('loadedmetadata', () => {
+          const duration = Math.floor(video.duration);
+          if (duration && duration > 0) {
+            course.value.duration = formatDuration(duration);
+            console.log('Duration:', course.value.duration);
+          } else if (!course.value.duration) {
+            course.value.duration = '未知';
+          }
+          video.remove(); // 清理创建的元素
+        });
+
+        video.addEventListener('error', () => {
+          if (!course.value.duration) {
+            course.value.duration = '未知';
+          }
+          video.remove();
+        });
+      } else if (!course.value.duration) {
+        course.value.duration = '未知';
+      }
+    };
+
+    const formatDuration = (seconds) => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+
+      if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      } else {
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+      }
+    };
+
     const initializeVideoPlayer = () => {
       if (videoPlayer.value && course.value.videoUrl) {
         player.value = videojs(videoPlayer.value, {
@@ -209,6 +187,7 @@ const formatDuration = (seconds) => {
           fluid: true,
           responsive: true
         })
+
         // 获取视频时长
         getVideoDuration();
 
@@ -236,7 +215,7 @@ const formatDuration = (seconds) => {
     }
 
     const onVideoEnded = () => {
-      markAsCompleted()
+      // 视频结束时的操作
     }
 
     const saveProgress = async (time) => {
@@ -256,73 +235,6 @@ const formatDuration = (seconds) => {
       }
     }
 
-    const markAsCompleted = async () => {
-      try {
-        await ElMessageBox.confirm(
-          '确定要将此课程标记为完成吗？',
-          '确认操作',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-
-        await store.dispatch('completeCourse', {
-          userId: store.getters.userId,
-          courseId: courseId.value
-        })
-
-        isCompleted.value = true
-        userProgress.value = {
-          ...userProgress.value,
-          isCompleted: true,
-          completedChapters: course.value.totalChapters || 1
-        }
-
-        ElMessage.success('课程已完成！')
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('操作失败')
-          console.error('Error marking course as completed:', error)
-        }
-      }
-    }
-
-    const resetProgress = async () => {
-      try {
-        await ElMessageBox.confirm(
-          '确定要重置学习进度吗？这将清除所有学习记录。',
-          '确认操作',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-
-        await store.dispatch('resetCourseProgress', {
-          userId: store.getters.userId,
-          courseId: courseId.value
-        })
-
-        userProgress.value = null
-        isCompleted.value = false
-        currentTime.value = 0
-
-        if (player.value) {
-          player.value.currentTime(0)
-        }
-
-        ElMessage.success('进度已重置')
-      } catch (error) {
-        if (error !== 'cancel') {
-          ElMessage.error('重置失败')
-          console.error('Error resetting progress:', error)
-        }
-      }
-    }
-
     const continueLearning = () => {
       if (player.value) {
         player.value.play()
@@ -330,7 +242,7 @@ const formatDuration = (seconds) => {
     }
 
     const goBack = () => {
-      router.push('/dashboard/courses')
+      router.push('/admin/courses')
     }
 
     onMounted(() => {
@@ -352,13 +264,9 @@ const formatDuration = (seconds) => {
       currentTime,
       isCompleted,
       progressPercentage,
-      canMarkCompleted,
-      format,
       getChapterType,
       onTimeUpdate,
       onVideoEnded,
-      markAsCompleted,
-      resetProgress,
       continueLearning,
       goBack
     }
@@ -421,12 +329,6 @@ const formatDuration = (seconds) => {
   gap: 4px;
 }
 
-.course-progress {
-  margin-top: 20px;
-  padding: 16px;
-  background: #f5f7fa;
-  border-radius: 6px;
-}
 
 .course-progress p {
   margin: 8px 0 0 0;
@@ -442,12 +344,6 @@ const formatDuration = (seconds) => {
   margin-bottom: 16px;
   border-radius: 8px;
   overflow: hidden;
-}
-
-.video-controls {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
 }
 
 .course-chapters {
@@ -484,4 +380,4 @@ const formatDuration = (seconds) => {
 :deep(.vjs-big-play-button:hover) {
   background-color: #409eff;
 }
-</style> 
+</style>
