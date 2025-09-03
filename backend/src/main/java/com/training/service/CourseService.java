@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -230,5 +231,30 @@ public class CourseService {
         }
 
         return courseRepository.save(course);
+    }
+
+    public Course updateCourseStatus(Long id) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("课程不存在"));
+
+        // 如果课程已过期，自动下架
+        if (course.getEndTime() != null && course.getEndTime().isBefore(LocalDateTime.now())) {
+            course.setIsOnline(false);
+        }
+
+        return courseRepository.save(course);
+    }
+
+    // 定时任务：批量下架已过期课程
+    @Transactional
+    public int offlineExpiredCourses() {
+        List<Course> expiredCourses = courseRepository.findByEndTimeBeforeAndIsOnlineTrue(LocalDateTime.now());
+        for (Course course : expiredCourses) {
+            course.setIsOnline(false);
+        }
+        if (!expiredCourses.isEmpty()) {
+            courseRepository.saveAll(expiredCourses);
+        }
+        return expiredCourses.size();
     }
 }

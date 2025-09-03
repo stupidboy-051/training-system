@@ -112,6 +112,16 @@ public class CourseController {
         }
     }
 
+    // 更新课程状态（如果已过期则下架）
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Course>> updateCourseStatus(@PathVariable Long id) {
+        try {
+            Course updatedCourse = courseService.updateCourseStatus(id);
+            return ResponseEntity.ok(ApiResponse.success("更新课程状态成功", updatedCourse));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("更新课程状态失败: " + e.getMessage()));
+        }
+    }
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Course>> updateCourse(@PathVariable Long id, @RequestBody CourseDto courseDto) {
         try {
@@ -197,6 +207,21 @@ public class CourseController {
             return ResponseEntity.ok(ApiResponse.success("更新进度成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    // 管理员手动下架过期课程
+    @PostMapping("/admin/offline-expired")
+    public ResponseEntity<ApiResponse<Integer>> offlineExpiredCoursesManually() {
+        try {
+            int count = courseService.offlineExpiredCourses();
+            if (count > 0) {
+                return ResponseEntity.ok(ApiResponse.success("手动下架成功，下架了 " + count + " 门已过期课程", count));
+            } else {
+                return ResponseEntity.ok(ApiResponse.success("没有需要下架的课程", count));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("下架失败: " + e.getMessage()));
         }
     }
 }

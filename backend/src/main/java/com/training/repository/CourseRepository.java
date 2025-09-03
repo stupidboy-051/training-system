@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -23,4 +24,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     // 根据角色过滤的分页查询方法
     Page<Course> findByIsOnlineTrueAndVisibleRolesId(Long roleId, Pageable pageable);
+
+    List<Course> findByEndTimeBeforeAndIsOnlineTrue(LocalDateTime dateTime);
 }
