@@ -38,9 +38,9 @@
             <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip/>
             <el-table-column prop="title" label="课程名称" min-width="200" />
             <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
-            <el-table-column prop="classHours" label="学时" width="100">
+            <el-table-column prop="score" label="学时" width="100">
               <template #default="scope">
-                {{ scope.row.classHours }} 小时
+                {{ scope.row.score }} 小时
               </template>
             </el-table-column>
             <el-table-column prop="price" label="价格" width="120">
@@ -64,11 +64,6 @@
             <el-table-column prop="endTime" label="结束时间" width="180">
               <template #default="scope">
                 {{ formatDateTime(scope.row.endTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" width="180">
-              <template #default="scope">
-                {{ formatDateTime(scope.row.createTime) }}
               </template>
             </el-table-column>
             <el-table-column label="操作" width="320" fixed="right">
@@ -143,8 +138,8 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="学时" prop="classHours">
-                <el-input-number v-model="courseForm.classHours" :min="0" :max="1000" />
+              <el-form-item label="学时" prop="score">
+                <el-input-number v-model="courseForm.score" :min="0" :max="1000" />
                 <span style="margin-left: 10px">小时</span>
               </el-form-item>
             </el-col>
@@ -158,7 +153,7 @@
                     type="datetime"
                     placeholder="选择开始时间"
                     style="width: 100%"
-                    value-format="YYYY-MM-DD HH:mm:ss"
+                    value-format="YYYY-MM-DDTHH:mm:ss"
                     @change="checkTimeRange"
                 />
               </el-form-item>
@@ -170,7 +165,7 @@
                     type="datetime"
                     placeholder="选择结束时间"
                     style="width: 100%"
-                    value-format="YYYY-MM-DD HH:mm:ss"
+                    value-format="YYYY-MM-DDTHH:mm:ss"
                     @change="checkTimeRange"
                 />
               </el-form-item>
@@ -244,9 +239,7 @@ export default {
       visibleRoleIds: [],
       price: 0,
       coverImageUrl: '',
-      createTime: null,
-      updateTime: null,
-      classHours: 0,
+      score: 0,
       startTime: '',
       endTime: ''
     })
@@ -267,7 +260,7 @@ export default {
       price: [
         { required: true, message: '请输入课程价格', trigger: 'blur' }
       ],
-      classHours: [
+      score: [
         { required: true, message: '请输入学时', trigger: 'blur' }
       ],
       startTime: [
@@ -323,9 +316,7 @@ export default {
         isOnline: true,
         visibleRoleIds: [],
         price: 0,
-        createTime: null,
-        updateTime: null,
-        classHours: 0,
+        score: 0,
         startTime: '',
         endTime: '',
       })
@@ -342,11 +333,8 @@ export default {
         coverImageUrl: course.coverImageUrl,
         isOnline: course.isOnline,
         visibleRoleIds: course.visibleRoles ? course.visibleRoles.map(role => role.id) : [],
-        visibleRoles: course.visibleRoles || [],
         price: course.price || 0,
-        createTime: course.createTime,
-        updateTime: course.updateTime,
-        classHours: course.classHours || 0,
+        score: course.score || 0,
         startTime: course.startTime,
         endTime: course.endTime,
       })
