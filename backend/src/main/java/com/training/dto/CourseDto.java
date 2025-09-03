@@ -2,6 +2,7 @@ package com.training.dto;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,4 +18,6 @@ public class CourseDto {
     private Boolean isOnline;
     private String coverImageUrl;
     private List<Long> visibleRoleIds;
-}
+    private LocalDateTime StartTime;
+    private LocalDateTime EndTime;
+    private Integer score;}

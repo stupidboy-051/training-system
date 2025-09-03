@@ -218,7 +218,9 @@ public class CourseService {
         course.setPrice(dto.getPrice());
         course.setIsOnline(Boolean.TRUE.equals(dto.getIsOnline()));
         course.setCoverImageUrl(dto.getCoverImageUrl());
-
+        course.setStartTime(dto.getStartTime());
+        course.setEndTime(dto.getEndTime());
+        course.setScore(dto.getScore());
         // 设置可见分类
         if (dto.getVisibleRoleIds() != null && !dto.getVisibleRoleIds().isEmpty()) {
             List<Role> cats = roleRepository.findAllById(dto.getVisibleRoleIds());
@@ -229,5 +231,4 @@ public class CourseService {
 
         return courseRepository.save(course);
     }
-
 }

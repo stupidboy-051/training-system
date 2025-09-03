@@ -52,4 +52,10 @@ public class Course {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updateTime;
+    @Column
+    private LocalDateTime startTime;
+    @Column
+    private LocalDateTime endTime;
+    @Column
+    private Integer score;
 }
