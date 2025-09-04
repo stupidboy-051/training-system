@@ -1,5 +1,7 @@
 package com.training.controller;
 
+import com.training.config.CompareFace;
+import com.training.config.FaceDetector;
 import com.training.dto.ApiResponse;
 import com.training.dto.CourseDto;
 import com.training.dto.MyCourseDto;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -222,6 +225,42 @@ public class CourseController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("下架失败: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/register/face")
+    public ResponseEntity<ApiResponse<Integer>> registerFace(/*（@RequestParam int userId,*/ @RequestParam String faceUrl) {
+        try {
+            FaceDetector faceDetector = new FaceDetector();
+            boolean isFace = faceDetector.detect(faceUrl);
+            if (isFace) {
+                // 存入数据库
+               // contentService.InsertAvaar(userId, faceUrl);
+                return ResponseEntity.ok(ApiResponse.success("人脸识别成功", 0));
+            } else {
+                return ResponseEntity.ok(ApiResponse.success("人脸识别失败", 1));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(ApiResponse.error("人脸识别失败 " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/compareFirst")
+    public String compareFacesFirst( @RequestParam String newFaceUrl) {
+        CompareFace compareFace = new CompareFace();
+        try {
+            String urlB = newFaceUrl;
+            String urlA = "https://web-itlasyd.oss-cn-beijing.aliyuncs.com/a69c359014c0db00713a7622a3050927552366d6b3bfdedae3247682934321f9.jpg";
+            boolean isSimilar = compareFace.compare(urlA, urlB);
+            if (isSimilar) {
+                return "1"; // 相似
+            } else {
+                return "0"; // 不相似
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Face comparison failed: " + e.getMessage();
         }
     }
 }

@@ -53,6 +53,21 @@
             <version>8.0.33</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>facebody20191230</artifactId>
+            <version>5.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>tea</artifactId>
+            <version>1.0.0</version> <!-- 或者更高版本 -->
+        </dependency>
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>credentials-java</artifactId>
+            <version>0.3.0</version>
+        </dependency>
 
         <!-- JWT -->
         <dependency>
