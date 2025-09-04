@@ -179,6 +179,7 @@ const formatDuration = (seconds) => {
       try {
         const response = await store.dispatch('fetchCourseById', courseId.value)
         course.value = response.data
+        console.log('Course:', response.data)
         await loadUserProgress()
         initializeVideoPlayer()
       } catch (error) {
@@ -229,7 +230,8 @@ const formatDuration = (seconds) => {
       if (player.value) {
         currentTime.value = player.value.currentTime()
         // 每30秒保存一次进度
-        if (Math.floor(currentTime.value) % 30 === 0) {
+        if (Math.floor(currentTime.value) % 5 === 0) {
+          console.log('穿一次进度');
           saveProgress(currentTime.value)
         }
       }
@@ -249,12 +251,14 @@ const formatDuration = (seconds) => {
           userId: store.getters.userId,
           courseId: courseId.value,
           currentTime: timeToSave,
-          completedChapters: userProgress.value ? userProgress.value.completedChapters : 0
+          completedChapters: userProgress.value ? userProgress.value.completedChapters : 0,
+          isCompleted: userProgress.value ? userProgress.value.isCompleted : false // 添加这一行
         })
       } catch (error) {
         console.error('Error saving progress:', error)
       }
     }
+
 
     const markAsCompleted = async () => {
       try {

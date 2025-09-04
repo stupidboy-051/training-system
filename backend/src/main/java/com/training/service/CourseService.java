@@ -128,8 +128,12 @@ public class CourseService {
         UserCourse userCourse = new UserCourse();
         userCourse.setUser(user);
         userCourse.setCourse(course);
+        userCourse.setIsCompleted(false); // 明确设置默认值
+        userCourse.setWatchProgress(0);   // 明确设置默认值
+        userCourse.setEnrollTime(LocalDateTime.now()); // 设置选课时间
         userCourseRepository.save(userCourse);
     }
+
 
     public void enrollCourseWithInvitation(User user, Course course) {
         // 检查用户是否已经选过这门课
@@ -141,8 +145,12 @@ public class CourseService {
         UserCourse userCourse = new UserCourse();
         userCourse.setUser(user);
         userCourse.setCourse(course);
+        userCourse.setIsCompleted(false); // 明确设置默认值
+        userCourse.setWatchProgress(0);   // 明确设置默认值
+        userCourse.setEnrollTime(LocalDateTime.now()); // 设置选课时间
         userCourseRepository.save(userCourse);
     }
+
 
     public List<UserCourseListDto> getUserCoursesDto(User user) {
         List<UserCourse> userCourses = userCourseRepository.findByUser(user);

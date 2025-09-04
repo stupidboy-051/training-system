@@ -35,8 +35,8 @@ public class UserCourse {
     @CreationTimestamp
     private LocalDateTime enrollTime;
 
-    @Column(nullable = false)
-    private Boolean isCompleted;
+    @Column(name = "is_completed", nullable = false)
+    private Boolean isCompleted = false; // 设置默认值为 false
 
     @Column
     private LocalDateTime completeTime;
