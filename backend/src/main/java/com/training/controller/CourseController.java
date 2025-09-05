@@ -8,6 +8,8 @@ import com.training.dto.MyCourseDto;
 import com.training.dto.UserCourseListDto;
 import com.training.entity.Course;
 import com.training.entity.User;
+import com.training.entity.UserCourse;
+import com.training.repository.UserCourseRepository;
 import com.training.service.CourseService;
 import com.training.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author 14798
@@ -35,6 +38,9 @@ public class CourseController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserCourseRepository userCourseRepository;
 
     // 管理员分页获取课程列表
     @GetMapping("/admin/page")
@@ -194,11 +200,35 @@ public class CourseController {
         }
     }
 
+    @GetMapping("/{id}/progress/{userId}")
+    public ResponseEntity<ApiResponse<UserCourseListDto>> getUserCourseProgress(
+            @PathVariable Long id,
+            @PathVariable Long userId) {
+        try {
+            User user = userService.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+            Course course = courseService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("课程不存在"));
+
+            Optional<UserCourse> userCourseOpt = userCourseRepository.findByUserAndCourse(user, course);
+            if (userCourseOpt.isPresent()) {
+                UserCourseListDto dto = courseService.convertToUserCourseListDto(userCourseOpt.get());
+                return ResponseEntity.ok(ApiResponse.success("获取用户课程进度成功", dto));
+            } else {
+                return ResponseEntity.badRequest().body(ApiResponse.error("用户未选择该课程"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @PutMapping("/{id}/progress")
     public ResponseEntity<ApiResponse<Void>> updateProgress(
             @PathVariable Long id,
             @RequestParam Long userId,
-            @RequestParam Integer progress) {
+            @RequestParam Integer progress,
+            @RequestParam(required = false) String lastStudyTime) {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));

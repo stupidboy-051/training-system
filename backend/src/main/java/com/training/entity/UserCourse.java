@@ -43,4 +43,7 @@ public class UserCourse {
 
     @Column
     private Integer watchProgress;
+    
+    @Column(name = "last_study_time")
+    private LocalDateTime lastStudyTime;
 }

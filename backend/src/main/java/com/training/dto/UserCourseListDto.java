@@ -18,4 +18,5 @@ public class UserCourseListDto {
     private Boolean isCompleted;
     private LocalDateTime completeTime;
     private Integer watchProgress;
+    private Integer currentTime;
 }

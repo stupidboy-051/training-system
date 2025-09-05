@@ -269,7 +269,12 @@ export default {
     }
 
     const watchCourse = (userCourse) => {
-      router.push(`/dashboard/course/${userCourse.courseId}`)
+      router.push({
+        path: `/dashboard/course/${userCourse.courseId}`,
+        query: {
+          progress: userCourse.watchProgress || 0
+        }
+      })
     }
 
     const markAsCompleted = async (userCourse) => {

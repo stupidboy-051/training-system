@@ -28,7 +28,7 @@
               class="sidebar-menu"
           >
             <el-menu-item index="/admin/face">
-              <el-icon><VideoPlay /></el-icon>
+              <el-icon><camera /></el-icon>
               <span>人脸识别</span>
             </el-menu-item>
             <el-menu-item index="/admin/courses">

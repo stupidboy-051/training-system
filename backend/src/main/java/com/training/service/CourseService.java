@@ -182,7 +182,7 @@ public class CourseService {
     /**
      * 转换为UserCourseListDto
      */
-    private UserCourseListDto convertToUserCourseListDto(UserCourse userCourse) {
+    public UserCourseListDto convertToUserCourseListDto(UserCourse userCourse) {
         UserCourseListDto dto = new UserCourseListDto();
         dto.setId(userCourse.getId());
         dto.setUserId(userCourse.getUser().getId());
@@ -194,6 +194,7 @@ public class CourseService {
         dto.setIsCompleted(userCourse.getIsCompleted());
         dto.setCompleteTime(userCourse.getCompleteTime());
         dto.setWatchProgress(userCourse.getWatchProgress());
+        dto.setCurrentTime(userCourse.getWatchProgress() != null ? userCourse.getWatchProgress() : 0);
         return dto;
     }
 
@@ -202,8 +203,10 @@ public class CourseService {
         if (userCourseOpt.isPresent()) {
             UserCourse userCourse = userCourseOpt.get();
             userCourse.setWatchProgress(progress);
+            userCourse.setLastStudyTime(LocalDateTime.now()); // 更新最后学习时间
             if (progress >= 100) {
                 userCourse.setIsCompleted(true);
+                userCourse.setCompleteTime(LocalDateTime.now());
             }
             userCourseRepository.save(userCourse);
         }
@@ -230,6 +233,8 @@ public class CourseService {
         course.setStartTime(dto.getStartTime());
         course.setEndTime(dto.getEndTime());
         course.setScore(dto.getScore());
+        course.setFaceRecognitionEnabled(dto.getFaceRecognitionEnabled() != null ? dto.getFaceRecognitionEnabled() : false);
+        course.setFaceRecognitionFrequency(dto.getFaceRecognitionFrequency() != null ? dto.getFaceRecognitionFrequency() : 30);
         // 设置可见分类
         if (dto.getVisibleRoleIds() != null && !dto.getVisibleRoleIds().isEmpty()) {
             List<Role> cats = roleRepository.findAllById(dto.getVisibleRoleIds());

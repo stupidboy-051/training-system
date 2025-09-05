@@ -20,4 +20,6 @@ public class CourseDto {
     private List<Long> visibleRoleIds;
     private LocalDateTime StartTime;
     private LocalDateTime EndTime;
-    private Integer score;}
+    private Integer score;
+    private Boolean faceRecognitionEnabled;
+    private Integer faceRecognitionFrequency;}
