@@ -227,37 +227,33 @@ public class CourseController {
             return ResponseEntity.badRequest().body(ApiResponse.error("下架失败: " + e.getMessage()));
         }
     }
-
-    @PostMapping("/register/face")
-    public ResponseEntity<ApiResponse<Integer>> registerFace(/*（@RequestParam int userId,*/ @RequestParam String faceUrl) {
+    @Autowired
+    private FaceDetector faceDetector;
+    @PostMapping("/face")
+    public ResponseEntity<ApiResponse<Integer>> registerFace(@RequestParam String faceUrl) {
         try {
-            FaceDetector faceDetector = new FaceDetector();
             boolean isFace = faceDetector.detect(faceUrl);
             if (isFace) {
-                // 存入数据库
-               // contentService.InsertAvaar(userId, faceUrl);
+                // TODO: 存入数据库
+                // contentService.insertAvatar(userId, faceUrl);
                 return ResponseEntity.ok(ApiResponse.success("人脸识别成功", 0));
             } else {
                 return ResponseEntity.ok(ApiResponse.success("人脸识别失败", 1));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().body(ApiResponse.error("人脸识别失败 " + e.getMessage()));
+            return ResponseEntity.badRequest().body(ApiResponse.error("人脸识别失败: " + e.getMessage()));
         }
     }
-
+    @Autowired
+    private CompareFace compareFace;
     @PostMapping("/compareFirst")
-    public String compareFacesFirst( @RequestParam String newFaceUrl) {
-        CompareFace compareFace = new CompareFace();
+    public String compareFacesFirst(@RequestParam String newFaceUrl) {
         try {
-            String urlB = newFaceUrl;
             String urlA = "https://web-itlasyd.oss-cn-beijing.aliyuncs.com/a69c359014c0db00713a7622a3050927552366d6b3bfdedae3247682934321f9.jpg";
+            String urlB = newFaceUrl;
             boolean isSimilar = compareFace.compare(urlA, urlB);
-            if (isSimilar) {
-                return "1"; // 相似
-            } else {
-                return "0"; // 不相似
-            }
+            return isSimilar ? "1" : "0";
         } catch (Exception e) {
             e.printStackTrace();
             return "Face comparison failed: " + e.getMessage();

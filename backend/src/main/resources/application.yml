@@ -53,3 +53,7 @@ logging:
     org.hibernate: WARN
     org.springframework.boot: INFO
     root: INFO
+
+aliyun:
+  access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+  access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
