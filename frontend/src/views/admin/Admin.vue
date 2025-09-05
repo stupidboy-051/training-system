@@ -27,13 +27,13 @@
               router
               class="sidebar-menu"
           >
-            <el-menu-item index="/admin/face">
-              <el-icon><camera /></el-icon>
-              <span>人脸识别</span>
-            </el-menu-item>
             <el-menu-item index="/admin/courses">
               <el-icon><VideoPlay /></el-icon>
               <span>课程管理</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/face">
+              <el-icon><camera /></el-icon>
+              <span>人脸识别</span>
             </el-menu-item>
             <el-menu-item index="/admin/question-banks">
               <el-icon><Document /></el-icon>
