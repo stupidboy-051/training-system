@@ -259,4 +259,51 @@ public class CourseController {
             return "Face comparison failed: " + e.getMessage();
         }
     }
+
+    @PostMapping("/face1")
+    public ResponseEntity<ApiResponse<Integer>> verifyFace(
+            @RequestParam Long userId,
+            @RequestParam String faceUrl) {
+        try {
+            // 1. 查找用户
+            User user = userService.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+            String dbFaceUrl = user.getFacePhotoUrl();
+            if (dbFaceUrl == null || dbFaceUrl.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("用户未录入人脸信息"));
+            }
+
+            // 2. 调用 compare 方法
+            boolean isSimilar = compareFace.compare(dbFaceUrl, faceUrl);
+
+            if (isSimilar) {
+                return ResponseEntity.ok(ApiResponse.success("人脸比对成功", 0));
+            } else {
+                return ResponseEntity.ok(ApiResponse.success("人脸比对失败", 1));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("人脸识别失败: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{courseId}/progress/{userId}")
+    public ResponseEntity<ApiResponse<Void>> resetProgress(
+            @PathVariable Long courseId,
+            @PathVariable Long userId) {
+        try {
+            User user = userService.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+            Course course = courseService.findById(courseId)
+                    .orElseThrow(() -> new RuntimeException("课程不存在"));
+
+            courseService.resetCourseProgress(user, course);
+            return ResponseEntity.ok(ApiResponse.success("进度已重置"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }

@@ -265,4 +265,16 @@ public class CourseService {
         }
         return expiredCourses.size();
     }
+
+    public void resetCourseProgress(User user, Course course) {
+        Optional<UserCourse> userCourseOpt = userCourseRepository.findByUserAndCourse(user, course);
+        if (userCourseOpt.isPresent()) {
+            UserCourse userCourse = userCourseOpt.get();
+            userCourse.setWatchProgress(0);
+            userCourse.setIsCompleted(false);
+            userCourseRepository.save(userCourse);
+        } else {
+            throw new RuntimeException("学习记录不存在");
+        }
+    }
 }
