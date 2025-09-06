@@ -202,13 +202,22 @@ public class CourseService {
         Optional<UserCourse> userCourseOpt = userCourseRepository.findByUserAndCourse(user, course);
         if (userCourseOpt.isPresent()) {
             UserCourse userCourse = userCourseOpt.get();
+            Integer currentProgress = userCourse.getWatchProgress();
+
+            // 不允许倒退进度
+            if (progress < currentProgress) {
+                throw new RuntimeException("进度不可小于当前进度");
+            }
+
             userCourse.setWatchProgress(progress);
-            userCourse.setLastStudyTime(LocalDateTime.now()); // 更新最后学习时间
+
             if (progress >= 100) {
                 userCourse.setIsCompleted(true);
-                userCourse.setCompleteTime(LocalDateTime.now());
             }
+
             userCourseRepository.save(userCourse);
+        } else {
+            throw new RuntimeException("学习记录不存在");
         }
     }
 
