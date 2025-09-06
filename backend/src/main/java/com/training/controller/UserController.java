@@ -41,7 +41,7 @@ public class UserController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<User> users = userService.findUsersWithPagination(pageable, keyword);
-            return ResponseEntity.ok(ApiResponse.success("获取用户列表成功", users));
+            return ResponseEntity.ok(new ApiResponse<>(true, "获取用户列表成功", users));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("获取用户列表失败: " + e.getMessage()));
         }
@@ -50,13 +50,13 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> users = userService.findAllUsers();
-        return ResponseEntity.ok(ApiResponse.success("获取用户列表成功", users));
+        return ResponseEntity.ok(new ApiResponse<>(true, "获取用户列表成功", users));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Long id) {
         return userService.findById(id)
-                .map(user -> ResponseEntity.ok(ApiResponse.success("获取用户成功", user)))
+                .map(user -> ResponseEntity.ok(new ApiResponse<>(true, "获取用户成功", user)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -65,7 +65,7 @@ public class UserController {
         try {
             user.setId(id);
             User updatedUser = userService.updateUser(user);
-            return ResponseEntity.ok(ApiResponse.success("更新用户成功", updatedUser));
+            return ResponseEntity.ok(new ApiResponse<>(true, "更新用户成功", updatedUser));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -75,7 +75,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<User>> updatePermissions(@PathVariable Long id, @RequestBody UserPermissionsUpdateDto dto) {
         try {
             User updated = userService.updateUserPermissions(id, dto);
-            return ResponseEntity.ok(ApiResponse.success("更新权限成功", updated));
+            return ResponseEntity.ok(new ApiResponse<>(true, "更新权限成功", updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -85,7 +85,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
-            return ResponseEntity.ok(ApiResponse.success("删除用户成功"));
+            return ResponseEntity.ok(new ApiResponse<>(true, "删除用户成功", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }

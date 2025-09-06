@@ -121,12 +121,12 @@ const routes = [
                 component: () => import('../views/admin/CourseManagement.vue')
             },
             {
-                path: 'courses/:id',
+                path: 'courses/:id/chapters',
                 name: 'AdminCoursesChapters',
                 component: () => import('../views/admin/AdminCoursesChapters.vue')
             },
             {
-                path: 'courses/:coursesId/chapters',
+                path: 'courses/:coursesId',
                 name: 'AdminCourseDetail',
                 component: () => import('../views/admin/AdminCourseDetail.vue')
             },

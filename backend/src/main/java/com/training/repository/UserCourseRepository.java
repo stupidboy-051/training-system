@@ -29,6 +29,9 @@ public interface UserCourseRepository extends JpaRepository<UserCourse, Long> {
 
     // 按用户名或真实姓名和课程ID搜索
     Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndCourseId(String userName, String userRealName, Long courseId, Pageable pageable);
+    
+    // 按课程ID和用户名或真实姓名搜索
+    Page<UserCourse> findByCourseIdAndUserUsernameContainingOrUserRealNameContaining(Long courseId, String userName, String userRealName, Pageable pageable);
 
     // 按用户名或真实姓名和完成状态搜索
     Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndIsCompleted(String userName, String userRealName, Boolean isCompleted, Pageable pageable);

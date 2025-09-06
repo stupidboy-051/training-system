@@ -182,7 +182,7 @@ public class CourseService {
     /**
      * 转换为UserCourseListDto
      */
-    private UserCourseListDto convertToUserCourseListDto(UserCourse userCourse) {
+    public UserCourseListDto convertToUserCourseListDto(UserCourse userCourse) {
         UserCourseListDto dto = new UserCourseListDto();
         dto.setId(userCourse.getId());
         dto.setUserId(userCourse.getUser().getId());
@@ -194,6 +194,7 @@ public class CourseService {
         dto.setIsCompleted(userCourse.getIsCompleted());
         dto.setCompleteTime(userCourse.getCompleteTime());
         dto.setWatchProgress(userCourse.getWatchProgress());
+        dto.setCurrentTime(userCourse.getWatchProgress() != null ? userCourse.getWatchProgress() : 0);
         return dto;
     }
 
@@ -201,24 +202,16 @@ public class CourseService {
         Optional<UserCourse> userCourseOpt = userCourseRepository.findByUserAndCourse(user, course);
         if (userCourseOpt.isPresent()) {
             UserCourse userCourse = userCourseOpt.get();
-            Integer currentProgress = userCourse.getWatchProgress();
-
-            // 不允许倒退进度
-            if (progress < currentProgress) {
-                throw new RuntimeException("进度不可小于当前进度");
-            }
-
             userCourse.setWatchProgress(progress);
-
+            userCourse.setLastStudyTime(LocalDateTime.now()); // 更新最后学习时间
             if (progress >= 100) {
                 userCourse.setIsCompleted(true);
+                userCourse.setCompleteTime(LocalDateTime.now());
             }
-
             userCourseRepository.save(userCourse);
-        } else {
-            throw new RuntimeException("学习记录不存在");
         }
     }
+
     public void unrollCourse(User user, Course course) {
         UserCourse userCourse = userCourseRepository.findByUserAndCourse(user, course)
                 .orElseThrow(() -> new RuntimeException("您没有选择这门课程"));
@@ -240,6 +233,8 @@ public class CourseService {
         course.setStartTime(dto.getStartTime());
         course.setEndTime(dto.getEndTime());
         course.setScore(dto.getScore());
+        course.setFaceRecognitionEnabled(dto.getFaceRecognitionEnabled() != null ? dto.getFaceRecognitionEnabled() : false);
+        course.setFaceRecognitionFrequency(dto.getFaceRecognitionFrequency() != null ? dto.getFaceRecognitionFrequency() : 30);
         // 设置可见分类
         if (dto.getVisibleRoleIds() != null && !dto.getVisibleRoleIds().isEmpty()) {
             List<Role> cats = roleRepository.findAllById(dto.getVisibleRoleIds());

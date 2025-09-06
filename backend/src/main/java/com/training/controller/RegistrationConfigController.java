@@ -18,12 +18,12 @@ public class RegistrationConfigController {
     @GetMapping
     public ResponseEntity<ApiResponse<RegistrationConfig>> get() {
         RegistrationConfig cfg = service.getOrCreate();
-        return ResponseEntity.ok(ApiResponse.success("获取成功", cfg));
+        return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", cfg));
     }
 
     @PutMapping
     public ResponseEntity<ApiResponse<RegistrationConfig>> update(@RequestBody RegistrationConfig body) {
         RegistrationConfig updated = service.update(body.getFieldsConfigJson());
-        return ResponseEntity.ok(ApiResponse.success("更新成功", updated));
+        return ResponseEntity.ok(new ApiResponse<>(true, "更新成功", updated));
     }
-} 
+}

@@ -253,8 +253,9 @@
                           :min="0"
                           :max="videoDuration"
                           :step="1"
+                          :precision="0"
                           size="small"
-                          controls-position="right"                      style="width: 120px;"
+                          controls-position="right"    style="width: 120px;"
                       />
                       <el-text style="margin: 0 5px;">秒</el-text>
                       <!-- 显示已选择的题目数量 -->
@@ -296,13 +297,15 @@
                             :key="index"
                             class="time-point-item"
                         >
+                          <!-- 用户时间点输入框也需要同样修改 -->
                           <el-input-number
                               v-model="timePoint.time"
                               :min="0"
                               :max="videoDuration"
                               :step="1"
+                              :precision="0"
                               size="small"
-                              controls-position="right"                          style="width: 100px;"
+                              controls-position="right"    style="width: 100px;"
                           />
                           <el-text style="margin: 0 10px;">秒</el-text>
 
@@ -672,12 +675,66 @@ export default {
       }
     }
 
-    const viewCourse = (course) => {
-      router.push(`/admin/courses/${course.id}`)
-    }
+    // 修改viewCourse方法，使用视频URL获取时长
+    const viewCourse = async (course) => {
+      try {
+        let duration = 3600; // 默认1小时
+        
+        // 如果有视频URL，尝试获取视频时长
+        if (course.videoUrl) {
+          try {
+            // 创建一个隐藏的video元素来获取视频时长
+            const video = document.createElement('video');
+            video.src = course.videoUrl;
+            video.style.display = 'none';
+            document.body.appendChild(video);
+            
+            // 等待视频元数据加载
+            await new Promise((resolve, reject) => {
+              video.addEventListener('loadedmetadata', () => {
+                duration = Math.round(video.duration);
+                document.body.removeChild(video);
+                resolve();
+              });
+              
+              video.addEventListener('error', () => {
+                document.body.removeChild(video);
+                resolve(); // 出错时使用默认时长
+              });
+              
+              // 设置超时，避免无限等待
+              setTimeout(() => {
+                document.body.removeChild(video);
+                resolve();
+              }, 5000);
+            });
+          } catch (error) {
+            console.log('无法获取视频时长，使用默认值');
+          }
+        }
+        
+        router.push({
+          path: `/admin/courses/${course.id}/chapters`,
+          query: {
+            courseTitle: course.title,
+            videoDuration: duration
+          }
+        });
+      } catch (error) {
+        console.error('跳转失败:', error);
+        // 如果出错，仍然跳转但使用默认时长
+        router.push({
+          path: `/admin/courses/${course.id}/chapters`,
+          query: {
+            courseTitle: course.title,
+            videoDuration: 3600
+          }
+        });
+      }
+    };
 
     const manageChapters = (course) => {
-      router.push(`/admin/courses/${course.id}/chapters`)
+      router.push(`/admin/courses/${course.id}`)
     }
 
     const handleSearch = () => {
@@ -744,71 +801,64 @@ export default {
       // 加载已有的弹题设置
       await loadExistingQuestionSettings(course.id)
     }
-// 加载已有的弹题设置
-    const loadExistingQuestionSettings = async (courseId) => {
-      try {
-        const response = await api.get(`/courses/${courseId}/question-settings`)
-        if (response.data.success) {
-          const settings = response.data.data
+const loadExistingQuestionSettings = async (courseId) => {
+    const response = await api.get(`/courses/${courseId}/question-settings`)
+    if (response.data.success) {
+      const settings = response.data.data
 
-          // 更新角色设置
-          if (settings.roleSettings) {
-            settings.roleSettings.forEach(roleSetting => {
-              const group = roleGroupedUsers.value.find(g => g.roleId === roleSetting.roleId)
-              if (group) {
-                group.settings.timePoints = roleSetting.timePoints.map(tp => ({
-                  time: tp.time,
-                  questions: tp.questions || []
-                }))
+      // 更新角色设置
+      if (settings.roleSettings) {
+        settings.roleSettings.forEach(roleSetting => {
+          const group = roleGroupedUsers.value.find(g => g.roleId === roleSetting.roleId)
+          if (group) {
+            group.settings.timePoints = roleSetting.settings.timePoints.map(tp => ({
+              time: tp.time,
+              questions: tp.questions || []
+            }))
 
-                // 更新该组下所有用户的时间点设置
-                group.users.forEach(user => {
-                  // 从用户设置中查找该用户的设置，如果没有则使用组设置
-                  const userSetting = settings.userSettings.find(us => us.userId === user.id)
-                  if (userSetting) {
-                    user.questionSettings = {
-                      timePoints: userSetting.timePoints.map(tp => ({
-                        time: tp.time,
-                        questions: tp.questions || []
-                      }))
-                    }
-                  } else {
-                    // 如果没有用户特定设置，则复制组设置
-                    user.questionSettings = {
-                      timePoints: group.settings.timePoints.map(tp => ({ ...tp }))
-                    }
-                  }
-                })
-              }
-            })
-          }
-
-          // 更新没有在roleSettings中但有特定用户设置的用户
-          if (settings.userSettings) {
-            settings.userSettings.forEach(userSetting => {
-              // 查找该用户是否已经在某个组中
-              let foundUser = false
-              for (const group of roleGroupedUsers.value) {
-                const user = group.users.find(u => u.id === userSetting.userId)
-                if (user) {
-                  user.questionSettings = {
-                    timePoints: userSetting.timePoints.map(tp => ({
-                      time: tp.time,
-                      questions: tp.questions || []
-                    }))
-                  }
-                  foundUser = true
-                  break
+            // 更新该组下所有用户的时间点设置
+            group.users.forEach(user => {
+              // 从用户设置中查找该用户的设置，如果没有则使用组设置
+              const userSetting = settings.userSettings.find(us => us.userId === user.id)
+              if (userSetting) {
+                user.questionSettings = {
+                  timePoints: userSetting.timePoints.map(tp => ({
+                    time: tp.time,
+                    questions: tp.questions || []
+                  }))
+                }
+              } else {
+                // 如果没有用户特定设置，则复制组设置
+                user.questionSettings = {
+                  timePoints: group.settings.timePoints.map(tp => ({ ...tp }))
                 }
               }
             })
           }
-        }
-      } catch (error) {
-        console.error('加载弹题设置失败:', error)
-        ElMessage.error('加载已有弹题设置失败')
+        })
+      }
+
+      // 更新没有在roleSettings中但有特定用户设置的用户
+      if (settings.userSettings) {
+        settings.userSettings.forEach(userSetting => {
+          // 查找该用户是否已经在某个组中
+          for (const group of roleGroupedUsers.value) {
+            const user = group.users.find(u => u.id === userSetting.userId)
+            if (user) {
+              user.questionSettings = {
+                timePoints: userSetting.timePoints.map(tp => ({
+                  time: tp.time,
+                  questions: tp.questions || []
+                }))
+              }
+              break
+            }
+          }
+        })
       }
     }
+}
+
       const loadUsersByVisibleRoles = async (course) => {
         userLoading.value = true
         try {
@@ -995,20 +1045,33 @@ export default {
     const selectedQuestions = ref([])
     const questionTableRef = ref(null)
 
-    // 添加题目选择对话框打开方法
-    const openQuestionSelectDialog = (timePoint, userId = null) => {
-      currentTimePoint.value = timePoint
-      currentUserId.value = userId
-      questionSelectDialogVisible.value = true
+const openQuestionSelectDialog = async (timePoint, userId = null) => {
+  currentTimePoint.value = timePoint
+  currentUserId.value = userId
+  questionSelectDialogVisible.value = true
 
-      // 重置状态
-      selectedQuestionBank.value = null
-      questions.value = []
-      selectedQuestions.value = []
+  // 重置状态
+  selectedQuestionBank.value = null
+  questions.value = []
+  selectedQuestions.value = []
 
-      // 加载题库
-      loadQuestionBanks()
-    }
+  // 加载题库
+  await loadQuestionBanks()
+
+  // 如果当前时间点已经有题目，需要在题目列表加载后进行预选中
+  if (timePoint.questions && timePoint.questions.length > 0) {
+    // 延迟执行，确保题目列表加载完成后再进行选中
+    setTimeout(() => {
+      timePoint.questions.forEach(question => {
+        const row = questions.value.find(q => q.id === question.id)
+        if (row) {
+          questionTableRef.value.toggleRowSelection(row, true)
+        }
+      })
+    }, 100)
+  }
+}
+
 
     // 加载题库列表
     const loadQuestionBanks = async () => {
@@ -1050,44 +1113,68 @@ export default {
       loadQuestionBanks()
     }
 
-    // 选择题库
-    const handleQuestionBankSelect = async (questionBank) => {
-      if (!questionBank) return
+const handleQuestionBankSelect = async (questionBank) => {
+  if (!questionBank) return
 
-      selectedQuestionBank.value = questionBank
-      questionCurrentPage.value = 1
-      await loadQuestions()
+  selectedQuestionBank.value = questionBank
+  questionCurrentPage.value = 1
+  await loadQuestions()
+
+  // 题目加载完成后，预选中已设置的题目
+  if (currentTimePoint.value.questions && currentTimePoint.value.questions.length > 0) {
+    nextTick(() => {
+      currentTimePoint.value.questions.forEach(question => {
+        const row = questions.value.find(q => q.id === question.id)
+        if (row) {
+          questionTableRef.value.toggleRowSelection(row, true)
+        }
+      })
+    })
+  }
+}
+const loadQuestions = async () => {
+  if (!selectedQuestionBank.value) return
+
+  questionLoading.value = true
+  try {
+    const params = {
+      page: questionCurrentPage.value - 1,
+      size: questionPageSize.value,
+      questionBankId: selectedQuestionBank.value.id,
+      keyword: questionSearchKeyword.value
     }
+    const response = await api.get('/questions', {params})
+    if (response.data.success) {
+      questions.value = response.data.data.content
+      questionTotal.value = response.data.data.totalElements
 
-    // 加载题目列表
-    const loadQuestions = async () => {
-      if (!selectedQuestionBank.value) return
+      // 清除之前的选择
+      if (questionTableRef.value) {
+        questionTableRef.value.clearSelection()
+      }
 
-      questionLoading.value = true
-      try {
-        const params = {
-          page: questionCurrentPage.value - 1,
-          size: questionPageSize.value,
-          questionBankId: selectedQuestionBank.value.id,
-          keyword: questionSearchKeyword.value
-        }
-        const response = await api.get('/questions', {params})
-        if (response.data.success) {
-          questions.value = response.data.data.content
-          questionTotal.value = response.data.data.totalElements
-
-          // 清除之前的选择
-          if (questionTableRef.value) {
-            questionTableRef.value.clearSelection()
-          }
-        }
-      } catch (error) {
-        console.error('Load questions error:', error)
-        ElMessage.error('加载题目失败')
-      } finally {
-        questionLoading.value = false
+      // 如果当前时间点已经有题目，进行预选中
+      if (currentTimePoint.value && currentTimePoint.value.questions && currentTimePoint.value.questions.length > 0) {
+        nextTick(() => {
+          currentTimePoint.value.questions.forEach(question => {
+            if (question.id) {
+              const row = questions.value.find(q => q.id === question.id)
+              if (row) {
+                questionTableRef.value.toggleRowSelection(row, true)
+              }
+            }
+          })
+        })
       }
     }
+  } catch (error) {
+    console.error('Load questions error:', error)
+    ElMessage.error('加载题目失败')
+  } finally {
+    questionLoading.value = false
+  }
+}
+
 
     // 题目搜索
     const handleQuestionSearch = () => {

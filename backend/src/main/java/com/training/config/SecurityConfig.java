@@ -41,9 +41,9 @@ public class SecurityConfig {
                 .antMatchers("/api/categories/**", "/h2-console/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/invitations/join").hasRole("BLAST_USER")
                 .antMatchers(HttpMethod.DELETE, "/api/courses/unroll/**").authenticated()
-                .antMatchers("/api/admin/**", "/api/invitations/**").hasAnyRole("SUPER_ADMIN")
-                    .antMatchers("api/**","/h2-console/**").permitAll()
-
+                .antMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                .antMatchers("/api/invitations/**").hasAnyRole("SUPER_ADMIN")
+                .antMatchers("/api/**","/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);

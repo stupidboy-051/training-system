@@ -58,4 +58,10 @@ public class Course {
     private LocalDateTime endTime;
     @Column
     private Integer score;
+    
+    @Column(name = "face_recognition_enabled", nullable = false)
+    private Boolean faceRecognitionEnabled = false;
+    
+    @Column(name = "face_recognition_frequency", nullable = false)
+    private Integer faceRecognitionFrequency = 30;
 }

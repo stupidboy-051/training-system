@@ -25,54 +25,64 @@
           </div>
         </div>
 
-        <div class="course-progress" v-if="userProgress">
-          <el-progress
-            :percentage="progressPercentage"
-            :format="format"
-            :stroke-width="8"
-            color="#409EFF"
-          />
-          <p>学习进度: {{ userProgress.completedChapters || 0 }}/{{ course.totalChapters || 0 }} 章节</p>
-        </div>
+        <!--        <div class="course-progress" v-if="userProgress">-->
+        <!--          <el-progress-->
+        <!--              :percentage="userProgress.watchProgress || 0"-->
+        <!--              :format="format"-->
+        <!--              :stroke-width="8"-->
+        <!--              color="#409EFF"-->
+        <!--          />-->
+        <!--          <p>视频观看进度: {{ userProgress.watchProgress || 0 }}%</p>-->
+        <!--          <p>章节完成: {{ userProgress.completedChapters || 0 }}/{{ course.totalChapters || 0 }}</p>-->
+        <!--        </div>-->
       </div>
 
       <div class="video-section">
         <div class="video-player">
           <video
-            ref="videoPlayer"
-            class="video-js"
-            controls
-            preload="auto"
-            width="100%"
-            height="400"
-            @timeupdate="onTimeUpdate"
-            @ended="onVideoEnded"
+              ref="videoPlayer"
+              class="video-js"
+              data-setup='{"autoplay": false, "controls": true}'
+              preload="auto"
+              @timeupdate="onTimeUpdate"
+              @ended="onVideoEnded"
           >
             <source :src="course.videoUrl" type="video/mp4">
             您的浏览器不支持视频播放。
           </video>
+
+          <!-- 播放按钮覆盖层 - 覆盖整个视频区域 -->
+          <div
+              class="play-overlay"
+              @click="togglePlayPause"
+              v-if="!isPlaying"
+          >
+            <div class="play-button">
+              <i class="el-icon-caret-right"></i>
+            </div>
+          </div>
+
+          <!-- 视频点击层 - 整个视频区域可点击 -->
+          <div
+              class="video-click-layer"
+              @click="togglePlayPause"
+              v-show="isPlaying"
+          ></div>
         </div>
 
         <div class="video-controls">
-          <el-button
-            type="primary"
-            @click="markAsCompleted"
-            :disabled="!canMarkCompleted"
-          >
-            {{ isCompleted ? '已完成' : '标记为完成' }}
-          </el-button>
-          <el-button @click="resetProgress">重置进度</el-button>
-        </div>
+        <el-button @click="resetProgress">重置进度</el-button>
+      </div>
       </div>
 
       <div class="course-chapters" v-if="course.chapters && course.chapters.length">
         <h3>课程章节</h3>
         <el-timeline>
           <el-timeline-item
-            v-for="(chapter, index) in course.chapters"
-            :key="index"
-            :timestamp="chapter.duration"
-            :type="getChapterType(chapter)"
+              v-for="(chapter, index) in course.chapters"
+              :key="index"
+              :timestamp="chapter.duration"
+              :type="getChapterType(chapter)"
           >
             <h4>{{ chapter.title }}</h4>
             <p>{{ chapter.description }}</p>
@@ -94,12 +104,12 @@
 
     <!-- 弹题对话框 -->
     <el-dialog
-      v-model="showQuestionDialog"
-      :title="`第 ${currentQuestionIndex + 1} 题`"
-      width="600px"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-      :show-close="false"
+        v-model="showQuestionDialog"
+        :title="`第 ${currentQuestionIndex + 1} 题`"
+        width="600px"
+        :close-on-click-modal="false"
+        :close-on-press-escape="false"
+        :show-close="false"
     >
       <div v-if="currentQuestion" class="question-dialog-content">
         <div class="question-header">
@@ -118,10 +128,10 @@
         <div v-if="currentQuestion.type === 'SINGLE_CHOICE'" class="question-options">
           <el-radio-group v-model="userAnswer">
             <el-radio
-              v-for="(option, index) in currentQuestion.options"
-              :key="option"
-              :label="String.fromCharCode(65 + index)"
-              class="option-item"
+                v-for="(option, index) in currentQuestion.options"
+                :key="option"
+                :label="String.fromCharCode(65 + index)"
+                class="option-item"
             >
               <span class="option-label">{{ String.fromCharCode(65 + index) }}.</span>
               <span class="option-content">{{ option }}</span>
@@ -133,10 +143,10 @@
         <div v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE'" class="question-options">
           <el-checkbox-group v-model="userAnswers">
             <el-checkbox
-              v-for="(option, index) in currentQuestion.options"
-              :key="option"
-              :label="String.fromCharCode(65 + index)"
-              class="option-item"
+                v-for="(option, index) in currentQuestion.options"
+                :key="option"
+                :label="String.fromCharCode(65 + index)"
+                class="option-item"
             >
               <span class="option-label">{{ String.fromCharCode(65 + index) }}.</span>
               <span class="option-content">{{ option }}</span>
@@ -161,19 +171,19 @@
         <!-- 填空题 -->
         <div v-else-if="currentQuestion.type === 'FILL_BLANK'" class="question-answer">
           <el-input
-            v-model="userAnswer"
-            type="text"
-            placeholder="请输入答案..."
+              v-model="userAnswer"
+              type="text"
+              placeholder="请输入答案..."
           />
         </div>
 
         <!-- 简答题 -->
         <div v-else-if="currentQuestion.type === 'SHORT_ANSWER'" class="question-answer">
           <el-input
-            v-model="userAnswer"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入您的答案..."
+              v-model="userAnswer"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入您的答案..."
           />
         </div>
       </div>
@@ -181,9 +191,9 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button
-            type="primary"
-            @click="submitAnswer"
-            :disabled="!canSubmitAnswer"
+              type="primary"
+              @click="submitAnswer"
+              :disabled="!canSubmitAnswer"
           >
             提交答案
           </el-button>
@@ -347,6 +357,13 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 人脸识别弹窗 -->
+    <FaceRecognitionDialog
+        v-model="showFaceRecognitionDialog"
+        :course-id="courseId"
+        @complete="onFaceRecognitionComplete"
+    />
   </div>
 </template>
 <script>
@@ -357,9 +374,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 import api from '@/api'
+import FaceRecognitionDialog from '@/components/FaceRecognitionDialog.vue'
 
 export default {
   name: 'CourseDetail',
+  components: {
+    FaceRecognitionDialog
+  },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -371,6 +392,8 @@ export default {
     const player = ref(null)
     const currentTime = ref(0)
     const isCompleted = ref(false)
+    const initialProgress = ref(0) // 从路由参数获取的初始进度
+    const isPlaying = ref(false) // 播放状态
 
     // 弹题相关变量 - 支持多题
     const showQuestionDialog = ref(false)
@@ -387,6 +410,15 @@ export default {
     const questionResults = ref([]) // 所有题目的答题结果
     const allQuestions = ref([]) // 所有题目（用于统计）
     const tempAnswers = ref({}) // 临时存储各题答案
+
+    // 人脸识别相关变量
+    const showFaceRecognitionDialog = ref(false)
+    const faceRecognitionConfig = ref({
+      faceRecognitionEnabled: false,
+      faceRecognitionFrequency: 1
+    })
+    const lastFaceRecognitionTime = ref(0)
+    const isFaceRecognitionActive = ref(false)
 
     // 计算属性
     const courseId = computed(() => route.params.id)
@@ -433,33 +465,6 @@ export default {
       return 'primary'
     }
 
-    const getVideoDuration = () => {
-      if (course.value.videoUrl) {
-        // 使用原生video元素获取时长
-        const video = document.createElement('video');
-        video.src = course.value.videoUrl;
-
-        video.addEventListener('loadedmetadata', () => {
-          const duration = Math.floor(video.duration);
-          if (duration && duration > 0) {
-            course.value.duration = formatDuration(duration);
-          } else if (!course.value.duration) {
-            course.value.duration = '未知';
-          }
-          video.remove(); // 清理创建的元素
-        });
-
-        video.addEventListener('error', () => {
-          if (!course.value.duration) {
-            course.value.duration = '未知';
-          }
-          video.remove();
-        });
-      } else if (!course.value.duration) {
-        course.value.duration = '未知';
-      }
-    };
-
     const formatDuration = (seconds) => {
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
@@ -474,30 +479,82 @@ export default {
 
     const loadCourse = async () => {
       try {
+        // 获取路由参数中的进度
+        const progressParam = route.query.progress
+        console.log('Progress Param:', progressParam)
+        if (progressParam) {
+          initialProgress.value = parseFloat(progressParam)
+          console.log('Initial Progress:', initialProgress.value)
+        }
+
         const response = await store.dispatch('fetchCourseById', courseId.value)
         course.value = response.data
         console.log('Course:', response.data)
         await loadUserProgress()
-        await loadQuestionSettings() // 加载弹题设置
-        initializeVideoPlayer()
+        await loadQuestionSettings()
+        await loadFaceRecognitionConfig()
+
+        // 延迟初始化视频，确保DOM已渲染
+        setTimeout(() => {
+          initializeVideoPlayer()
+        }, 100)
       } catch (error) {
         ElMessage.error('加载课程信息失败')
         console.error('Error loading course:', error)
       }
     }
-
     const loadUserProgress = async () => {
       try {
+        const userId = store.getters.userId;
+        console.log('Loading user progress:', { userId, courseId: courseId.value });
+
+        if (!userId) {
+          console.error('User ID is not available');
+          // 创建默认进度对象
+          userProgress.value = {
+            watchProgress: 0,
+            completedChapters: 0,
+            isCompleted: false
+          };
+          return;
+        }
+
         const response = await store.dispatch('fetchUserCourseProgress', {
-          userId: store.getters.userId,
+          userId: userId,
           courseId: courseId.value
-        })
-        userProgress.value = response.data
-        isCompleted.value = userProgress.value && userProgress.value.isCompleted
+        });
+        console.log('User progress response:', response);
+        userProgress.value = response.data || {
+          watchProgress: 0,
+          completedChapters: 0,
+          isCompleted: false
+        };
+        isCompleted.value = userProgress.value && userProgress.value.isCompleted;
+        console.log('User progress loaded:', userProgress.value);
       } catch (error) {
-        console.error('Error loading user progress:', error)
+        console.error('Error loading user progress:', error);
+        if (error.response) {
+          console.error('Response error:', error.response.status, error.response.data);
+
+          // 如果用户未选择该课程，创建默认进度
+          if (error.response.status === 400 && error.response.data.message === "用户未选择该课程") {
+            console.log('User has not enrolled in this course, creating default progress');
+            userProgress.value = {
+              watchProgress: 0,
+              completedChapters: 0,
+              isCompleted: false
+            };
+          }
+        } else {
+          // 其他错误，也创建默认进度
+          userProgress.value = {
+            watchProgress: 0,
+            completedChapters: 0,
+            isCompleted: false
+          };
+        }
       }
-    }
+    };
 
     // 虚拟弹题数据
     const virtualQuestionSettings = [
@@ -538,104 +595,324 @@ export default {
       }
     ]
 
+    // 加载人脸识别配置
+    const loadFaceRecognitionConfig = async () => {
+      try {
+        const response = await api.get(`/course-face-config/${courseId.value}`)
+        if (response.data.success) {
+          faceRecognitionConfig.value = response.data.data
+          console.log('人脸识别配置加载成功:', faceRecognitionConfig.value)
+        }
+      } catch (error) {
+        console.error('加载人脸识别配置失败:', error)
+        // 使用默认配置
+        faceRecognitionConfig.value = {
+          faceRecognitionEnabled: false,
+          faceRecognitionFrequency: 30
+        }
+      }
+    }
+
     // 加载弹题设置
     const loadQuestionSettings = async () => {
       try {
         const response = await api.get(`/courses/${courseId.value}/question-settings/user/${store.getters.userId}`)
         if (response.data.success) {
-          questionSettings.value = response.data.data.timePoints || []
+          // 处理后端返回的格式
+          const settingsData = response.data.data
+
+          if (settingsData.userSettings && settingsData.userSettings.length > 0) {
+            // 使用用户特定设置
+            const userSetting = settingsData.userSettings[0]
+            questionSettings.value = userSetting.timePoints.map(timePoint => ({
+              timePointId: timePoint.time,
+              time: timePoint.time,
+              questions: timePoint.questions
+            }))
+          } else if (settingsData.roleSettings && settingsData.roleSettings.length > 0) {
+            // 使用角色设置
+            const roleSetting = settingsData.roleSettings[0]
+            questionSettings.value = roleSetting.settings.timePoints.map(timePoint => ({
+              timePointId: timePoint.time,
+              time: timePoint.time,
+              questions: timePoint.questions
+            }))
+          } else {
+            // 如果没有设置，使用虚拟数据
+            console.warn('没有找到弹题设置，使用虚拟数据')
+            questionSettings.value = virtualQuestionSettings
+          }
+
           console.log('弹题设置:', questionSettings.value)
         } else {
-          // 如果后端返回失败，使用虚拟数据
           console.warn('后端弹题设置获取失败，使用虚拟数据')
-          ElMessage.warning('使用演示弹题数据')
           questionSettings.value = virtualQuestionSettings
         }
       } catch (error) {
-        // 如果请求失败，使用虚拟数据
         console.warn('后端弹题设置获取失败，使用虚拟数据:', error)
-        ElMessage.warning('使用演示弹题数据')
         questionSettings.value = virtualQuestionSettings
       }
     }
-
+    // 修复initializeVideoPlayer方法，添加loadedmetadata事件监听
     const initializeVideoPlayer = () => {
-      if (videoPlayer.value && course.value.videoUrl) {
-        player.value = videojs(videoPlayer.value, {
-          controls: true,
-          autoplay: false,
-          preload: 'auto',
-          fluid: true,
-          responsive: true
-        })
-        // 获取视频时长
-        getVideoDuration();
+      if (!videoPlayer.value || !course.value?.videoUrl) return;
 
-        // 恢复播放进度
-        if (userProgress.value && userProgress.value.currentTime) {
-          player.value.currentTime(userProgress.value.currentTime)
+      // 清理现有的播放器实例
+      if (player.value) {
+        player.value.dispose();
+        player.value = null;
+      }
+
+      // 配置video.js选项
+      const options = {
+        controls: true,
+        autoplay: false,
+        preload: 'auto',
+        fluid: true,
+        responsive: true,
+        bigPlayButton: false, // 隐藏大播放按钮
+        controlBar: {
+          children: [
+            'playToggle',
+            'progressControl',
+            'volumePanel',
+            'currentTimeDisplay',
+            'timeDivider',
+            'durationDisplay',
+            'fullscreenToggle'
+          ]
         }
+      };
 
-        player.value.on('beforepluginsetup', () => {
-          if (player.value) {
-            saveProgress(player.value.currentTime());
+      // 创建播放器实例
+      player.value = videojs(videoPlayer.value, options, function onPlayerReady() {
+        console.log('Video player is ready');
+
+        // 设置视频源
+        this.src({
+          src: course.value.videoUrl,
+          type: 'video/mp4'
+        });
+
+        // 关键修复：监听loadedmetadata事件
+        this.on('loadedmetadata', function() {
+          const duration = this.duration();
+          if (duration > 0) {
+            console.log('视频元数据加载完成，时长:', duration);
+            course.value.duration = formatDuration(Math.floor(duration));
+            console.log('Duration:', course.value.duration);
+            handleInitialSeek(duration);
           }
         });
-      }
-    }
 
-    const onTimeUpdate = () => {
-      if (player.value) {
-        currentTime.value = player.value.currentTime()
-        // 检查是否需要弹题
-        checkQuestionTrigger(currentTime.value)
-        // 每30秒保存一次进度
-        if (Math.floor(currentTime.value) % 5 === 0) {
-          console.log('穿一次进度');
-          saveProgress(currentTime.value)
-        }
-      }
-    }
+        // 监听播放进度更新
+        this.on('timeupdate', () => {
+          onTimeUpdate();
+        });
 
-    // 检查是否需要弹题
-    const checkQuestionTrigger = (videoTime) => {
-      // 遍历所有弹题时间点
-      questionSettings.value.forEach(timePoint => {
-        const triggerTime = timePoint.time
-        // 检查当前时间是否在触发时间点附近（1秒内），且未触发过
-        if (Math.abs(videoTime - triggerTime) <= 1 && !triggeredTimePoints.value.has(triggerTime)) {
-          // 触发弹题
-          triggerQuestion(timePoint)
-          // 标记为已触发
-          triggeredTimePoints.value.add(triggerTime)
-        }
+        // 监听播放状态变化
+        this.on('play', () => {
+          isPlaying.value = true;
+          console.log('视频正在播放');
+        });
+
+        this.on('pause', () => {
+          isPlaying.value = false;
+          console.log('视频已暂停');
+        });
+
+        // 监听视频结束
+        this.on('ended', () => {
+          isPlaying.value = false;
+          onVideoEnded();
+          ElMessage.success('课程已完成！')
+        });
+
+        // 监听错误
+        this.on('error', (error) => {
+          console.error('Video player error:', error);
+        });
+      });
+    };
+
+    // 优化handleInitialSeek，让视频在指定位置暂停
+    const handleInitialSeek = (duration) => {
+      let seekTime = 0
+      let targetProgress = 0
+
+      console.log('处理初始进度跳转 - 参数:', {
+        initialProgress: initialProgress.value,
+        userProgress: userProgress.value?.watchProgress,
+        duration: duration
       })
+
+      // 优先级1：从路由参数获取的初始进度
+      if (initialProgress.value > 0) {
+        targetProgress = initialProgress.value
+        seekTime = (targetProgress / 100) * duration
+        console.log(`从路由参数跳转到进度 ${targetProgress}% 的位置: ${seekTime}秒`)
+      }
+      // 优先级2：恢复用户之前的观看进度
+      else if (userProgress.value && userProgress.value.watchProgress > 0) {
+        targetProgress = userProgress.value.watchProgress
+        seekTime = (targetProgress / 100) * duration
+        console.log(`恢复观看进度到: ${seekTime}秒`)
+      }
+
+      if (seekTime > 0 && seekTime < duration) {
+        // 确保seekTime有效
+        seekTime = Math.max(0, Math.min(seekTime, duration - 1))
+
+        player.value.currentTime(seekTime)
+        console.log('已设置视频播放位置到:', seekTime)
+
+        // 确保视频在指定位置暂停
+        player.value.pause()
+        console.log('视频已在指定位置暂停')
+
+        // 更新进度条显示
+        if (userProgress.value) {
+          userProgress.value.watchProgress = Math.round((seekTime / duration) * 100)
+        }
+      } else {
+        console.log('没有需要跳转的进度，从头开始，保持暂停状态')
+        player.value.currentTime(0)
+        player.value.pause()
+      }
     }
 
-    // 触发弹题
-    const triggerQuestion = (timePoint) => {
-      if (!timePoint.questions || timePoint.questions.length === 0) {
+    // 优化后的onTimeUpdate方法
+    const onTimeUpdate = () => {
+      if (!player.value) return
+
+      const currentTimeVal = player.value.currentTime()
+      const duration = player.value.duration()
+
+      if (duration && duration > 0) {
+        const progress = Math.round((currentTimeVal / duration) * 100)
+
+        // 更新学习进度
+        if (userProgress.value) {
+          userProgress.value.watchProgress = Math.min(progress, 100)
+        }
+
+        currentTime.value = currentTimeVal
+
+        // 检查是否需要人脸识别
+        checkForFaceRecognition() // 添加这行
+
+
+        // 检查是否需要弹题
+        checkQuestionTrigger(currentTimeVal)
+
+        // 每5秒保存一次进度（防抖）
+        if (Math.floor(currentTimeVal) % 5 === 0) {
+          if (!lastSaveTime || Date.now() - lastSaveTime > 4000) {
+            lastSaveTime = Date.now()
+            saveProgress(currentTimeVal)
+          }
+        }
+      }
+    }
+
+// 添加防抖变量，避免频繁保存进度
+    let lastSaveTime = 0;
+
+    // 检查是否需要人脸识别
+    const checkForFaceRecognition = () => {
+      console.log('检查人脸识别',faceRecognitionConfig.value.faceRecognitionEnabled,isFaceRecognitionActive.value)
+      if (!faceRecognitionConfig.value.faceRecognitionEnabled || isFaceRecognitionActive.value) {
         return
       }
 
-      // 暂停视频
-      if (player.value) {
-        player.value.pause()
+      const now = Date.now()
+      const lastTime = lastFaceRecognitionTime.value
+      const frequency = faceRecognitionConfig.value.faceRecognitionFrequency  *  1000 // 转换为毫秒
+      console.log('now:', now , '毫秒')
+      console.log('上次人脸识别时间:', lastTime , '毫秒')
+      console.log('时间差:', now-lastTime, '毫秒')
+      console.log('人脸识别间隔:', frequency, '毫秒')
+      // 检查是否到达触发时间（允许±30秒的误差）
+      if (now - lastTime >= frequency) {
+        console.log('触发人脸识别检查')
+        lastFaceRecognitionTime.value = now
+        isFaceRecognitionActive.value = true
+
+        // 暂停视频
+        if (player.value) {
+          player.value.pause()
+        }
+        console.log('弹出人脸')
+        // 显示人脸识别弹窗
+        showFaceRecognitionDialog.value = true
+      }
+    }
+
+    // 人脸识别完成后的回调
+    const onFaceRecognitionComplete = (result) => {
+      console.log('人脸识别完成:', result)
+      isFaceRecognitionActive.value = false
+      showFaceRecognitionDialog.value = false
+
+      // 继续播放视频
+      if (player.value && result.success) {
+        player.value.play()
       }
 
-      // 设置当前时间点的所有题目
-      currentQuestions.value = [...timePoint.questions] // 复制数组
-      allQuestions.value = [...timePoint.questions] // 保存所有题目用于统计
-      currentQuestionIndex.value = 0
-      questionResults.value = [] // 重置答题结果
-      tempAnswers.value = {} // 清空临时答案存储
-
-      // 恢复第一题的答案
-      restoreCurrentAnswer()
-
-      // 显示题目对话框
-      showQuestionDialog.value = true
+      // 如果识别失败，可以显示提示
+      if (!result.success) {
+        ElMessage.warning('人脸识别失败，请重试')
+      }
     }
+
+    // 检查是否需要触发弹题
+    const checkQuestionTrigger = (currentTime) => {
+      if (!questionSettings.value || questionSettings.value.length === 0) {
+        return
+      }
+
+      // 检查每个时间点
+      for (const setting of questionSettings.value) {
+        const timePoint = setting.time
+
+        // 检查是否已触发过这个时间点
+        if (triggeredTimePoints.value.has(timePoint)) {
+          continue
+        }
+
+        // 检查是否到达触发时间（允许±1秒的误差）
+        if (Math.abs(currentTime - timePoint) <= 1) {
+          console.log(`触发弹题，时间点: ${timePoint}秒，题目数量: ${setting.questions?.length || 0}`)
+
+          // 标记这个时间点已触发
+          triggeredTimePoints.value.add(timePoint)
+
+          // 设置当前时间点的所有题目
+          if (setting.questions && setting.questions.length > 0) {
+            currentQuestions.value = [...setting.questions]
+            currentQuestionIndex.value = 0
+            allQuestions.value = [...setting.questions] // 保存所有题目用于统计
+
+            // 重置答案
+            userAnswer.value = ''
+            userAnswers.value = []
+            tempAnswers.value = {}
+            questionResults.value = []
+
+            // 暂停视频
+            if (player.value) {
+              player.value.pause()
+            }
+
+            // 显示弹题对话框
+            showQuestionDialog.value = true
+            break // 只触发第一个匹配的时间点
+          }
+        }
+      }
+    }
+
+
 
     // 保存当前题目的答案到临时存储
     const saveCurrentAnswer = () => {
@@ -659,6 +936,21 @@ export default {
         } else {
           resetCurrentAnswer()
         }
+      }
+    }
+
+    // 播放/暂停切换
+    const togglePlayPause = () => {
+      if (!player.value) return
+
+      if (isPlaying.value) {
+        player.value.pause()
+        isPlaying.value = false
+        console.log('视频已暂停')
+      } else {
+        player.value.play()
+        isPlaying.value = true
+        console.log('视频开始播放')
       }
     }
 
@@ -724,7 +1016,7 @@ export default {
                 return question.options[index]
               })
               correctAnswer = question.answers.map(idx =>
-                question.options[idx.charCodeAt(0) - 65]
+                  question.options[idx.charCodeAt(0) - 65]
               )
               isCorrect = JSON.stringify(userAnswerArray.sort()) === JSON.stringify(correctAnswer.sort())
 
@@ -808,54 +1100,74 @@ export default {
         console.error('提交答案失败:', error)
       }
     }
-
+// 新增专门用于保存指定百分比的函数
+    const saveProgressWithPercentage = async (percentage) => {
+      try {
+        await store.dispatch('updateUserCourseProgress', {
+          userId: store.getters.userId,
+          courseId: courseId.value,
+          completedChapters: percentage
+        });
+      } catch (error) {
+        console.error('Error saving progress:', error);
+      }
+    };
     const onVideoEnded = () => {
-      markAsCompleted()
-    }
+      // saveProgressWithPercentage(100);
+      markAsCompleted(true) // 传递参数表示是自动完成
 
+    }
     const saveProgress = async (time) => {
       // If time is not provided, use the last known current time
       const timeToSave = time !== undefined ? time : currentTime.value;
       if (timeToSave <= 0) return; // Don't save if there's no progress
 
       try {
+        // 获取视频总时长
+        let videoDuration = 0;
+        if (player.value) {
+          videoDuration = player.value.duration();
+        }
+
+        // 计算观看进度百分比
+        let watchProgress = 0;
+        if (videoDuration && videoDuration > 0) {
+          watchProgress = Math.round((timeToSave / videoDuration) * 100);
+          // 确保百分比不超过100
+          watchProgress = Math.min(watchProgress, 100);
+        }
+
+        console.log('Saving progress:', {
+          currentTime: timeToSave,
+          videoDuration: videoDuration,
+          watchProgress: watchProgress
+        });
+
         await store.dispatch('updateUserCourseProgress', {
           userId: store.getters.userId,
           courseId: courseId.value,
-          currentTime: timeToSave,
-          completedChapters: userProgress.value ? userProgress.value.completedChapters : 0,
-          isCompleted: userProgress.value ? userProgress.value.isCompleted : false // 添加这一行
-        })
+          completedChapters: watchProgress,
+          lastStudyTime: new Date().toISOString() // 添加当前时间作为最后学习时间
+        });
       } catch (error) {
-        console.error('Error saving progress:', error)
+        console.error('Error saving progress:', error);
       }
-    }
-
-    const markAsCompleted = async () => {
+    };
+    const markAsCompleted = async (autoComplete = false) => {
       try {
-        await ElMessageBox.confirm(
-          '确定要将此课程标记为完成吗？',
-          '确认操作',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-
-        await store.dispatch('completeCourse', {
+        await store.dispatch('updateUserCourseProgress', {
           userId: store.getters.userId,
-          courseId: courseId.value
+          courseId: courseId.value,
+          progress: 100,
+          lastStudyTime: new Date().toISOString() // 添加当前时间作为最后学习时间
         })
-
         isCompleted.value = true
         userProgress.value = {
           ...userProgress.value,
           isCompleted: true,
+          watchProgress: 100, // 设置为100%
           completedChapters: course.value.totalChapters || 1
         }
-
-        ElMessage.success('课程已完成！')
       } catch (error) {
         if (error !== 'cancel') {
           ElMessage.error('操作失败')
@@ -864,16 +1176,17 @@ export default {
       }
     }
 
+
     const resetProgress = async () => {
       try {
         await ElMessageBox.confirm(
-          '确定要重置学习进度吗？这将清除所有学习记录。',
-          '确认操作',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
+            '确定要重置学习进度吗？这将清除所有学习记录。',
+            '确认操作',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
         )
 
         await store.dispatch('resetCourseProgress', {
@@ -1002,6 +1315,7 @@ export default {
 
     onMounted(() => {
       loadCourse()
+      lastFaceRecognitionTime.value = Date.now()
     })
 
     onUnmounted(() => {
@@ -1018,6 +1332,7 @@ export default {
       videoPlayer,
       currentTime,
       isCompleted,
+      isPlaying,
       progressPercentage,
       canMarkCompleted,
       format,
@@ -1028,6 +1343,7 @@ export default {
       resetProgress,
       continueLearning,
       goBack,
+      togglePlayPause,
       // 弹题相关
       showQuestionDialog,
       showAllResultsDialog,
@@ -1048,7 +1364,13 @@ export default {
       submitAnswer,
       displayUserAnswer,
       displayCorrectAnswer,
-      closeAllResultsDialog
+      closeAllResultsDialog,
+      // 人脸识别相关
+      showFaceRecognitionDialog,
+      faceRecognitionConfig,
+      lastFaceRecognitionTime,
+      isFaceRecognitionActive,
+      onFaceRecognitionComplete,
     }
   }
 }
@@ -1124,12 +1446,15 @@ export default {
 
 .video-section {
   margin-bottom: 30px;
+  width: 100%;
 }
 
 .video-player {
   margin-bottom: 16px;
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .video-controls {
@@ -1266,16 +1591,32 @@ export default {
 /* Video.js 样式覆盖 */
 :deep(.video-js) {
   border-radius: 8px;
+  width: 100% !important;
+  height: 450px !important;
+  background-color: #000;
+}
+
+:deep(.vjs-tech) {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 :deep(.vjs-big-play-button) {
-  background-color: rgba(64, 158, 255, 0.8);
-  border-color: #409eff;
+  display: none !important; /* 完全隐藏大播放按钮 */
 }
 
-:deep(.vjs-big-play-button:hover) {
-  background-color: #409eff;
+:deep(.vjs-poster) {
+  display: none !important; /* 隐藏海报图片 */
 }
+
+:deep(.vjs-loading-spinner) {
+  display: none !important; /* 隐藏加载动画 */
+}
+
+:deep(.vjs-control-bar) {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+}
+
 .all-results {
   max-height: 500px;
   overflow-y: auto;
@@ -1357,5 +1698,107 @@ export default {
 .explanation .value {
   color: #409eff;
   font-style: italic;
+}
+
+/* 视频播放器容器 */
+.video-player {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-js {
+  width: 100%;
+  height: 400px;
+  display: block;
+}
+
+/* 播放按钮覆盖层 - 避开底部进度条区域 */
+.play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 24px); /* 留出底部50px给进度条 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.play-overlay:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.play-button {
+  width: 80px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  position: relative; /* 添加相对定位 */
+}
+
+.play-button:hover {
+  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.play-button i {
+  display: none; /* 隐藏原来的图标，使用CSS三角形 */
+}
+
+/* 向右三角形 */
+.play-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-35%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 16px solid white;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+}
+
+/* 视频点击层 - 避开底部进度条区域 */
+.video-click-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 24px); /* 留出底部50px给进度条 */
+  cursor: pointer;
+  z-index: 5;
+}
+
+@media (max-width: 768px) {
+  .course-detail {
+    padding: 10px;
+  }
+
+  .video-js {
+    height: 250px;
+  }
+
+  .play-button {
+    width: 60px;
+    height: 60px;
+  }
+
+  .play-button i {
+    font-size: 24px;
+  }
 }
 </style>

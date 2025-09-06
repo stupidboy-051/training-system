@@ -122,11 +122,14 @@ export default createStore({
       }
     },
 
-    async updateUserCourseProgress({ commit }, { userId, courseId, currentTime, completedChapters }) {
+    async updateUserCourseProgress({ commit }, { userId, courseId, currentTime, completedChapters, lastStudyTime }) {
       try {
-        const response = await api.put(`/courses/${courseId}/progress/${userId}`, {
-          currentTime,
-          completedChapters
+        // 计算进度百分比（基于completedChapters或currentTime）
+        const response = await api.put(`/courses/${courseId}/progress`, null, {
+          params: {
+            userId: userId,
+            progress: completedChapters || 0
+          }
         })
         commit('SET_USER_PROGRESS', response.data.data)
         return response.data
