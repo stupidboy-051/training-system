@@ -820,7 +820,6 @@ export default {
 
     // 检查是否需要人脸识别
     const checkForFaceRecognition = () => {
-      console.log('检查人脸识别',faceRecognitionConfig.value.faceRecognitionEnabled,isFaceRecognitionActive.value)
       if (!faceRecognitionConfig.value.faceRecognitionEnabled || isFaceRecognitionActive.value) {
         return
       }
